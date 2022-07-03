@@ -32,6 +32,8 @@ func LogSeverityParse(severity string) (logging.Severity, error) {
 		return logging.Debug, nil
 	case "warning":
 		return logging.Warning, nil
+	case "warn":
+		return logging.Warning, nil
 	case "error":
 		return logging.Error, nil
 	case "emergency":
@@ -48,21 +50,22 @@ func ioLogging(c *gin.Context) {
 	if projectID == "" {
 		log.Fatalf("Not Specified env GOOGLE_CLOUD_PROJECT: %v", projectID)
 	}
-	log.Printf("projectID: %s, len: %v", projectID, len(projectID))
+	// log.Printf("projectID: %s, len: %v", projectID, len(projectID))
 	client, err := logging.NewClient(ctx, projectID)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Failed to create client: %v", err))
 	}
 	defer client.Close()
 	logName := c.PostForm("logName")
 	if logName == "" {
 		c.String(http.StatusBadRequest, "logName Field is required")
 	}
-	log.Printf("Log Name: %s, len: %v", logName, len(logName))
+	// log.Printf("Log Name: %s, len: %v", logName, len(logName))
 	logger := client.Logger(strings.TrimSpace(strings.ToLower(logName)))
 	defer logger.Flush() // Ensure the entry is written.
 	severity, err := LogSeverityParse(c.PostForm("severity"))
 	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
 		log.Fatalln(err)
 	}
 	logger.Log(logging.Entry{

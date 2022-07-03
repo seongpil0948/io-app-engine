@@ -1,12 +1,12 @@
 package controller
 
 import (
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 	"sync"
+
+	"net/http"
 )
 
 type BootPay struct {
@@ -50,12 +50,13 @@ func (b BootPay) AccessToken() (string, error) {
 		getHttpJson(*resp, &objmap)
 		return objmap["data"]["token"].(string), nil
 	} else {
-		b, err := ioutil.ReadAll(resp.Body)
+		var bytes []byte
+		resp.Body.Read(bytes)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Printf("Fail BootPay Access Token, Url: %s, status: %v,  Info: %s", apiUrl, resp.Status, string(b))
+		log.Printf("Fail BootPay Access Token, Url: %s, status: %v,  Info: %s", apiUrl, resp.Status, string(bytes))
 		return "", err
 	}
 
@@ -109,9 +110,10 @@ func (b BootPay) Cancel(receiptId, name, reason string, price int) {
 		log.Fatalln(err)
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	var bytes []byte
+	resp.Body.Read(bytes)
 	if err == nil {
-		str := string(respBody)
+		str := string(bytes)
 		log.Println(str)
 	}
 }

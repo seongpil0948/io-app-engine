@@ -31,7 +31,7 @@ func InitRoutes() gin.Engine {
 	mode := os.Getenv("GAE_ENV")
 	if strings.HasPrefix(mode, "standard") {
 		log.Printf("deploy App Engine for production, Port: %s", os.Getenv("PORT"))
-		os.Setenv("GIN_MODE", "release")
+		gin.SetMode(gin.ReleaseMode)
 	} else {
 		log.Printf("deploy App Engine for development, Port: %s", os.Getenv("PORT"))
 	}

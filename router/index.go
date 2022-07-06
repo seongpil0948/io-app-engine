@@ -37,6 +37,7 @@ func InitRoutes() gin.Engine {
 	}
 	r := gin.Default()
 	initMiddle(r)
+
 	gin.DebugPrintRouteFunc = func(httpMethod, absolutePath, handlerName string, nuHandlers int) {
 		log.Printf("===> Endpoint %v %v %v %v\n", httpMethod, absolutePath, handlerName, nuHandlers)
 	}
@@ -51,5 +52,6 @@ func InitRoutes() gin.Engine {
 	SetMsgRoutes(api.Group("msg"))
 	SetCommonRoutes(api.Group("common"))
 	SetLogRoutes(api.Group("log"))
+	SetMailRoutes(api.Group("mail"))
 	return *r
 }

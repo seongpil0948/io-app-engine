@@ -51,10 +51,7 @@ func onFeedBack(c *gin.Context) {
 	objmap["createdAt"] = time.Now()
 	log.Printf("Received onFeedBack Data %v", objmap)
 	inst := fire.GetFireInstance()
-	store, err := inst.Inst.Firestore(inst.Ctx)
-	if err != nil {
-		log.Fatalf("error initializing Firestore: %v\n", err)
-	}
+	store, _ := inst.Inst.Firestore(inst.Ctx)
 	doc := store.Collection("bootpayFeedBack").NewDoc()
 	doc.Set(inst.Ctx, objmap)
 

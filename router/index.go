@@ -53,5 +53,6 @@ func InitRoutes() gin.Engine {
 	SetCommonRoutes(api.Group("common"))
 	SetLogRoutes(api.Group("log"))
 	SetMailRoutes(api.Group("mail"))
+	SetLinkRoutes(api.Group("linkage"))
 	return *r
 }

@@ -40,14 +40,14 @@ func (b BootPay) AccessToken() (string, error) {
 		"private_key":    b.pk,
 	}
 	apiUrl := b.ApiUrl([]string{"request", "token"}, true)
-	resp, err := http.Post(apiUrl, "application/json", DataToBuff(payload))
+	resp, err := http.Post(apiUrl, "application/json", JsonDataToBuff(payload))
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
 		var objmap map[string]map[string]interface{}
-		getHttpJson(*resp, &objmap)
+		GetHttpJson(*resp, &objmap)
 		return objmap["data"]["token"].(string), nil
 	} else {
 		var bytes []byte
@@ -83,7 +83,7 @@ func (b BootPay) VerifyReceipt(receiptId string, price int) bool {
 	}
 	defer resp.Body.Close()
 	var objmap map[string]map[string]interface{}
-	getHttpJson(*resp, &objmap)
+	GetHttpJson(*resp, &objmap)
 	log.Printf("Url: %s, status: %v, Receipt Info: %+v", apiUrl, resp.Status, dump(objmap))
 	log.Printf("Status Type: %T, Val: %v, Price Type: %T, Val: %v, Input Price: %v", objmap["data"]["status"], objmap["data"]["status"], objmap["data"]["price"], objmap["data"]["price"], price)
 	status := int(objmap["data"]["status"].(float64))
@@ -98,7 +98,7 @@ func (b BootPay) Cancel(receiptId, name, reason string, price int) {
 		"reason":     reason}
 
 	apiUrl := b.ApiUrl([]string{"cancel.json"}, true)
-	req, err := http.NewRequest("POST", apiUrl, DataToBuff(payload))
+	req, err := http.NewRequest("POST", apiUrl, JsonDataToBuff(payload))
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -1,0 +1,5 @@
+cron:
+- description: "Refresh User Tokens"
+  url: /api/linkage/refreshTokens
+  schedule: every 50 minutes
+  # target: beta

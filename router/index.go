@@ -20,7 +20,8 @@ func initMiddle(r *gin.Engine) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost", "https://io-box.firebaseapp.com", "https://io-box.web.app", "https://io-box--dev-wplgfcvy.web.app", "https://inout-box.com", "https://io-box--dev-pcug7p0p.web.app", "https://io-box--pr1-dev-tr8yrr1h.web.app"}
+	// port not working 인듯..
+	config.AllowOrigins = []string{"http://localhost", "http://localhost:8090", "https://io-box.firebaseapp.com", "https://io-box.web.app", "https://io-box--dev-wplgfcvy.web.app", "https://inout-box.com", "https://io-box--dev-pcug7p0p.web.app", "https://io-box--pr1-dev-tr8yrr1h.web.app"}
 	r.Use(cors.New(config))
 }
 

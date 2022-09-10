@@ -46,12 +46,12 @@ func sendEmail(c *gin.Context) {
 		email := userInfo["email"].(string)
 		to = append(to, email)
 	}
-
-	msg := []byte(fmt.Sprintf(
-		"From: %s\r\n"+
-			"To: %s\r\n"+
-			"Subject: %s\r\n\r\n"+
-			"%s \r\n", from, strings.Join(to, ", "), subject, body))
+	frm := fmt.Sprintf("From: %s\r\n", from)
+	toto := fmt.Sprintf("To: %s\r\n", strings.Join(to, ", "))
+	sbj := fmt.Sprintf("Subject: %s\n", subject)
+	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	bd := fmt.Sprintf("<html><body><div>%s</div></body></html>", body)
+	msg := []byte(frm + toto + sbj + mime + bd)
 	// 메일 보내기
 	err := smtp.SendMail(fmt.Sprintf("%s:587", smtpAddress), auth, from, to, msg)
 	if err != nil {

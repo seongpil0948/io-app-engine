@@ -18,6 +18,7 @@ type OAuthToken struct {
 	MallId          string    `json:"mall_id" firestore:"mallId,omitempty"`
 	UserId          string    `json:"user_id" firestore:"userId,omitempty"`
 	Scopes          []string  `json:"scopes" firestore:"scopes,omitempty"`
+	Service         string    `json:"service" firestore:"service,omitempty"`
 }
 
 type CafeToken struct {

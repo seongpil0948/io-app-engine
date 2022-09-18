@@ -45,12 +45,13 @@ func saveFirestoreCafeToken(resp *http.Response, userId string) error {
 		MallId:          objmap["mall_id"].(string),
 		UserId:          objmap["user_id"].(string),
 		Scopes:          scopes,
+		Service:         "CAFE",
 	}
 	cafeToken := NewCafeToken(*token, objmap["shop_no"].(string))
 	inst := fire.GetFireInstance()
 	store, _ := inst.Inst.Firestore(inst.Ctx)
 	cPath := fmt.Sprintf("user/%s/tokens", userId)
-	_, err := store.Collection(cPath).Doc("cafe").Set(inst.Ctx, cafeToken)
+	_, err := store.Collection(cPath).Doc(objmap["access_token"].(string)).Set(inst.Ctx, cafeToken)
 	return err
 }
 

@@ -50,7 +50,11 @@ func refreshTokens(c *gin.Context) {
 	if !isCron {
 		log.Printf("요청 헤더에서 크론명세를 발견하지 못했습니다. %#v", cronH)
 	}
-	tk.RefreshTokens()
+	err := tk.RefreshTokens()
+	if err != nil {
+		log.Fatalln(err.Error())
+		c.AbortWithStatusJSON(500, gin.H{"err": err})
+	}
 	c.String(200, "refresh tokens is done")
 }
 func getCafeOrders(c *gin.Context) {
@@ -74,7 +78,12 @@ func getCafeOrders(c *gin.Context) {
 		c.AbortWithStatusJSON(400, gin.H{"err": "endDate Field is required"})
 		return
 	}
-	orders, err := tk.GetCafeOrders(mallId, userId, startDate, endDate)
+	tokenId := c.PostForm("tokenId")
+	if len(tokenId) < 3 {
+		c.AbortWithStatusJSON(400, gin.H{"err": "tokenId Field is required"})
+		return
+	}
+	orders, err := tk.GetCafeOrders(mallId, userId, startDate, endDate, tokenId)
 	if err["err"] == "doc not exist" {
 		c.AbortWithStatusJSON(401, err)
 	} else if err != nil {

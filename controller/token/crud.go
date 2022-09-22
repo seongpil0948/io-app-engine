@@ -12,6 +12,7 @@ import (
 	b64 "encoding/base64"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	cnt "github.com/io-boxies/io-app-engine/controller"
 	"github.com/io-boxies/io-app-engine/controller/fire"
 	"google.golang.org/api/iterator"
@@ -20,7 +21,7 @@ import (
 const cafeClientId = "mnhAX4sDM9UmCchzOwzTAA"
 const cafeSecret = "8KAAKdXQLtmgAo0dBt8avC"
 
-func saveFirestoreCafeToken(resp *http.Response, userId string) error {
+func saveFirestoreCafeToken(resp *http.Response, userId string, docId string) error {
 	defer resp.Body.Close()
 	var objmap map[string]interface{}
 	cnt.GetHttpJson(*resp, &objmap)
@@ -43,15 +44,16 @@ func saveFirestoreCafeToken(resp *http.Response, userId string) error {
 		RefreshExpireAt: refreshExpireAt,
 		ClientId:        objmap["client_id"].(string),
 		MallId:          objmap["mall_id"].(string),
-		UserId:          objmap["user_id"].(string),
+		UserId:          userId,
 		Scopes:          scopes,
 		Service:         "CAFE",
+		ServiceId:       objmap["user_id"].(string),
 	}
 	cafeToken := NewCafeToken(*token, objmap["shop_no"].(string))
 	inst := fire.GetFireInstance()
 	store, _ := inst.Inst.Firestore(inst.Ctx)
 	cPath := fmt.Sprintf("user/%s/tokens", userId)
-	_, err := store.Collection(cPath).Doc(objmap["access_token"].(string)).Set(inst.Ctx, cafeToken)
+	_, err := store.Collection(cPath).Doc(docId).Set(inst.Ctx, cafeToken)
 	return err
 }
 
@@ -77,14 +79,14 @@ func SaveCafeToken(code string, redirectUri string, mallId string, userId string
 		return resp.StatusCode, errObj
 	}
 
-	err = saveFirestoreCafeToken(resp, userId)
+	err = saveFirestoreCafeToken(resp, userId, uuid.New().String())
 	if err != nil {
 		return 500, gin.H{"err": err.Error()}
 	}
 	return 200, nil
 }
 
-func RefreshTokens() {
+func RefreshTokens() error {
 	inst := fire.GetFireInstance()
 	store, _ := inst.Inst.Firestore(inst.Ctx)
 	iter := store.CollectionGroup("tokens").Documents(inst.Ctx)
@@ -97,9 +99,14 @@ func RefreshTokens() {
 		doc, err := iter.Next()
 		if err == iterator.Done {
 			break
-		} else if doc.Ref.ID == "cafe" {
-			var token CafeToken
-			doc.DataTo(&token)
+		} else if err != nil {
+			return fmt.Errorf("error in get token List: %#v", err.Error())
+		}
+		var token CafeToken
+		doc.DataTo(&token)
+		log.Printf("Try refresh Doc: %s ", doc.Ref.ID)
+		if token.Service == "CAFE" {
+			log.Println("In refresh cafe token Scope")
 			url := fmt.Sprintf("https://%s.cafe24api.com/api/v2/oauth/token", token.MallId)
 			cafePayload.Set("refresh_token", token.RefreshToken)
 			req, _ := http.NewRequest("POST", url, bytes.NewBufferString(cafePayload.Encode()))
@@ -110,27 +117,28 @@ func RefreshTokens() {
 				errObj := make(gin.H)
 				cnt.GetHttpJson(*resp, &errObj)
 				if errObj != nil {
-					log.Printf("ERROR: %#v", errObj)
+
+					return fmt.Errorf("error in cafe refresh API: %#v", errObj)
 				}
-				return
+				return fmt.Errorf("error in cafe refresh API: %#v", err.Error())
 			}
 			defer resp.Body.Close()
-			err = saveFirestoreCafeToken(resp, token.UserId)
+			err = saveFirestoreCafeToken(resp, token.UserId, doc.Ref.ID)
+			log.Println("refresh done")
 			if err != nil {
-				log.Fatalln(err.Error())
+				return fmt.Errorf("error in save refresh token: %#v", err.Error())
 			}
-		} else if err != nil {
-			log.Fatalln(err.Error())
 		}
 
 	}
+	return nil
 }
 
-func GetCafeOrders(mallId string, userId string, startDate string, endDate string) (interface{}, gin.H) {
+func GetCafeOrders(mallId string, userId string, startDate string, endDate string, tokenId string) (interface{}, gin.H) {
 	inst := fire.GetFireInstance()
 	store, _ := inst.Inst.Firestore(inst.Ctx)
 	cPath := fmt.Sprintf("user/%s/tokens", userId)
-	dsnap, err := store.Collection(cPath).Doc("cafe").Get(inst.Ctx)
+	dsnap, err := store.Collection(cPath).Doc(tokenId).Get(inst.Ctx)
 	if !dsnap.Exists() {
 		return nil, gin.H{"err": "doc not exist"}
 	} else if err != nil {
@@ -138,7 +146,7 @@ func GetCafeOrders(mallId string, userId string, startDate string, endDate strin
 	}
 	var token CafeToken
 	dsnap.DataTo(&token)
-	// fmt.Printf("Cafe Token data: %#v\n", token)
+	// fmt.Printf("Cafe token data: %#v\n", token)
 
 	url := fmt.Sprintf("https://%s.cafe24api.com/api/v2/admin/orders?start_date=%s&end_date=%s&embed=items,cancellation,return,exchange", mallId, startDate, endDate)
 	req, _ := http.NewRequest("GET", url, nil)

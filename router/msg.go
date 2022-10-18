@@ -19,13 +19,13 @@ func sendPush(c *gin.Context) {
 	var param_tokens []string
 	app := fire.GetFireInstance()
 	msgClient, _ := app.Inst.Messaging(app.Ctx)
-	uIds := c.PostFormArray("userIds")
+	userIds := c.PostFormArray("toUserIds")
 	storeClient, _ := app.Inst.Firestore(app.Ctx)
 	param_tokens = c.PostFormArray("tokens")
-	iter := storeClient.Collection("user").Where("userInfo.userId", "in", uIds).Documents(app.Ctx)
+	iter := storeClient.Collection("user").Where("userInfo.userId", "in", userIds).Documents(app.Ctx)
 	webToLink := c.PostForm("toWebLink")
 	if webToLink == "" {
-		webToLink = "https://io-box.web.app"
+		webToLink = "https://inout-box.com"
 	}
 	for {
 		doc, err := iter.Next()
@@ -35,22 +35,24 @@ func sendPush(c *gin.Context) {
 			log.Fatalln(err)
 		}
 		userInfo := doc.Data()["userInfo"].(map[string]interface{})
-		acc_tokens := userInfo["fcmTokens"].([]interface{})
-		for _, t := range acc_tokens { // Add User Token If not in Param Token
-			exist := false
-			for _, r := range param_tokens {
-				if t == r {
-					exist = true
+		if acc_tokens, ok := userInfo["fcmTokens"].([]interface{}); ok {
+			for _, t := range acc_tokens { // Add User Token If not in Param Token
+				exist := false
+				token := t.(map[string]interface{})["token"].(string)
+				for _, r := range param_tokens {
+					if token == r {
+						exist = true
+					}
 				}
-			}
-			if !exist {
-				param_tokens = append(param_tokens, t.(string))
+				if !exist {
+					param_tokens = append(param_tokens, token)
+				}
 			}
 		}
 
 		fmt.Println()
 	}
-	logo := "https://io-box.web.app/logo.png"
+	logo := "https://inout-box.com/logo.png"
 	message := &messaging.MulticastMessage{
 		Data: map[string]string{
 			"data1": c.PostForm("data1"),

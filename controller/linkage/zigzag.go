@@ -33,7 +33,6 @@ func GetZigzagOrders(accessKey, secretKey, signedDate string, dateFrom, dateTo i
 		map[string]interface{}{
 			"query": orderQuery,
 			"variables": fmt.Sprintf(`{
-				"status": "NEW_ORDER",
 				"date_ymd_from": %d,
 				"date_ymd_to": %d
 			}`, dateFrom, dateTo)}, authHeader)
@@ -111,12 +110,10 @@ func getAuthHeader(query string, signedDate string, accessKey string, secretKey 
 }
 
 const orderQuery = `query (
-  $status: OrderItemStatus
   $date_ymd_from: Int
   $date_ymd_to: Int
 ) {
   order_item_list(
-    status: $status
     date_ymd_from: $date_ymd_from
     date_ymd_to: $date_ymd_to
   ) {

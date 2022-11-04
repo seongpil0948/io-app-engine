@@ -1,14 +1,20 @@
 package router
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/io-boxies/io-app-engine/controller/linkage"
 	tk "github.com/io-boxies/io-app-engine/controller/token"
 )
 
 func SetLinkRoutes(g *gin.RouterGroup) {
+	g.POST("/getZigZagOrders", getZigZagOrders)
 	g.POST("/saveCafeToken", saveCafeToken)
 	g.POST("/getCafeOrders", getCafeOrders)
 	g.GET("/refreshTokens", refreshTokens)
@@ -93,5 +99,57 @@ func getCafeOrders(c *gin.Context) {
 			"orders": orders,
 		})
 	}
+}
 
+func getZigZagOrders(c *gin.Context) {
+	tokenDbId := c.PostForm("tokenDbId")
+	if len(tokenDbId) < 3 {
+		c.AbortWithStatusJSON(400, gin.H{"err": "tokenDbId is required"})
+		return
+	}
+	userId := c.PostForm("userId")
+	if len(userId) < 3 {
+		c.AbortWithStatusJSON(400, gin.H{"err": "userId Field is required"})
+		return
+	}
+	startDate := c.PostForm("startDate")
+	if len(startDate) < 3 {
+		c.AbortWithStatusJSON(400, gin.H{"err": "startDate Field is required"})
+		return
+	}
+	endDate := c.PostForm("endDate")
+	if len(endDate) < 3 {
+		c.AbortWithStatusJSON(400, gin.H{"err": "endDate Field is required"})
+		return
+	}
+
+	var token tk.IoAuthToken
+	dsnap, errObj := tk.GetToken(userId, tokenDbId)
+	if errObj != nil {
+		c.AbortWithStatusJSON(400, errObj)
+		return
+	}
+	dataMap := dsnap.Data()
+	dbByte, _ := json.Marshal(dataMap)
+	_ = json.Unmarshal(dbByte, &token)
+	if token.Service != "ZIGZAG" {
+		c.AbortWithStatusJSON(400, gin.H{"err": fmt.Sprintf("%s는 지그재그 토큰이 아닙니다. %s", tokenDbId, token.Service)})
+		return
+	}
+	startInt, err := strconv.Atoi(strings.Replace(startDate, "-", "", -1))
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"err": err.Error()})
+		return
+	}
+	endInt, err := strconv.Atoi(strings.Replace(endDate, "-", "", -1))
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{"err": err.Error()})
+		return
+	}
+	resp, errObj := linkage.GetZigzagOrders(token.AccessKey, token.SecretKey, token.CreatedAt.Format("2006-01-02"), startInt, endInt)
+	if errObj != nil {
+		c.AbortWithStatusJSON(500, errObj)
+		return
+	}
+	c.JSON(200, resp)
 }

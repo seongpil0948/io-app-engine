@@ -36,7 +36,7 @@ func saveFirestoreCafeToken(resp *http.Response, userId string, docId string) er
 	for _, scope := range objmap["scopes"].([]interface{}) {
 		scopes = append(scopes, scope.(string))
 	}
-	token := &OAuthToken{
+	token := &IoAuthToken{
 		CreatedAt:       issuedAt,
 		AccessToken:     objmap["access_token"].(string),
 		ExpireAt:        expireAt,
@@ -58,7 +58,6 @@ func saveFirestoreCafeToken(resp *http.Response, userId string, docId string) er
 }
 
 func SaveCafeToken(code string, redirectUri string, mallId string, userId string) (int, gin.H) {
-
 	payload := url.Values{}
 	payload.Set("grant_type", "authorization_code")
 	payload.Set("code", code)
@@ -135,16 +134,12 @@ func RefreshTokens() error {
 }
 
 func GetCafeOrders(mallId string, userId string, startDate string, endDate string, tokenId string) (interface{}, gin.H) {
-	inst := fire.GetFireInstance()
-	store, _ := inst.Inst.Firestore(inst.Ctx)
-	cPath := fmt.Sprintf("user/%s/tokens", userId)
-	dsnap, err := store.Collection(cPath).Doc(tokenId).Get(inst.Ctx)
-	if !dsnap.Exists() {
-		return nil, gin.H{"err": "doc not exist"}
-	} else if err != nil {
-		return nil, gin.H{"err": err.Error()}
-	}
+
 	var token CafeToken
+	dsnap, errObj := GetToken(userId, tokenId)
+	if errObj != nil {
+		return nil, errObj
+	}
 	dsnap.DataTo(&token)
 	// fmt.Printf("Cafe token data: %#v\n", token)
 

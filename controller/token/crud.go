@@ -105,7 +105,6 @@ func RefreshTokens() error {
 		doc.DataTo(&token)
 		log.Printf("Try refresh Doc: %s ", doc.Ref.ID)
 		if token.Service == "CAFE" {
-			log.Println("In refresh cafe token Scope")
 			url := fmt.Sprintf("https://%s.cafe24api.com/api/v2/oauth/token", token.MallId)
 			cafePayload.Set("refresh_token", token.RefreshToken)
 			req, _ := http.NewRequest("POST", url, bytes.NewBufferString(cafePayload.Encode()))

@@ -26,16 +26,24 @@ type ZigOrderResp struct {
 
 const zigApiUrl = "https://openapi.zigzag.kr/1/graphql"
 
+// const zigApiUrl = "https://openapi.alpha.zigzag.kr/1/graphql"
+
 func GetZigzagOrders(accessKey, secretKey, signedDate string, dateFrom, dateTo int) (*ZigOrderResp, gin.H) {
 	// date format: 20221029
+	variables := fmt.Sprintf(`{
+				"date_ymd_from": %d,
+				"date_ymd_to": %d
+			}`, dateFrom, dateTo)
+	// variables := fmt.Sprintf(`{
+	// 			"date_ymd_from": %d,
+	// 			"date_ymd_to": %d,
+	// 			"status": "NEW_ORDER"
+	// 		}`, dateFrom, dateTo)
 	authHeader := getAuthHeader(orderQuery, signedDate, accessKey, secretKey)
 	body, err := postZigzag(zigApiUrl,
 		map[string]interface{}{
-			"query": orderQuery,
-			"variables": fmt.Sprintf(`{
-				"date_ymd_from": %d,
-				"date_ymd_to": %d
-			}`, dateFrom, dateTo)}, authHeader)
+			"query":     orderQuery,
+			"variables": variables}, authHeader)
 	if err != nil {
 		return nil, gin.H{"err": err.Error()}
 	}
@@ -47,12 +55,13 @@ func GetZigzagOrders(accessKey, secretKey, signedDate string, dateFrom, dateTo i
 }
 
 func parseOrderList(body []byte) (*ZigOrderResp, error) {
-	var resData map[string]map[string]map[string]interface{}
+	// var resData map[string]map[string]map[string]interface{}
+	var resData map[string]map[string]interface{}
 	if err := json.Unmarshal(body, &resData); err != nil {
 		return nil, err
 	}
 	if data, ok := resData["data"]; ok {
-		var data map[string]interface{} = data["order_item_list"]
+		var data map[string]interface{} = data["order_item_list"].(map[string]interface{})
 		item_list, ok := data["item_list"].([]interface{})
 		if !ok {
 			return nil, errors.New("zigzag order_list field item_list is nil")
@@ -112,10 +121,12 @@ func getAuthHeader(query string, signedDate string, accessKey string, secretKey 
 const orderQuery = `query (
   $date_ymd_from: Int
   $date_ymd_to: Int
+  $status: OrderItemStatus
 ) {
   order_item_list(
     date_ymd_from: $date_ymd_from
     date_ymd_to: $date_ymd_to
+	status: $status
   ) {
     total_count # int
     item_list {
@@ -140,13 +151,12 @@ const orderQuery = `query (
         custom_product_code # 판매자가 부여한 상품 코드 # string;
         custom_product_item_code # 판매자가 부여한 옵션 코드 # string;
       }
-      status # 상태 # OrderItemStatus
+	  status # 상태 # OrderItemStatus
       active_request {
         # 취소/반품 요청
         date_requested # 요청일자 (unix timestamp) # int
         type # 종류 # OrderItemRequestType
         status # 요청 상태 # OrderItemRequestStatus
-        collecting_type # 상품 수거 방법 # CollectingType
         requested_reason_category # 취소/환불 이유  # RequestedReasonCategory
         requested_reason # 취소/환불 상세 이유
       }

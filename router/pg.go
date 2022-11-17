@@ -53,7 +53,11 @@ func onFeedBack(c *gin.Context) {
 	inst := fire.GetFireInstance()
 	store, _ := inst.Inst.Firestore(inst.Ctx)
 	doc := store.Collection("bootpayFeedBack").NewDoc()
+	// receipt_id := objmap["receipt_id"].(string)
+	// doc := store.Collection("bootpayFeedBack").Doc(receipt_id)
 	doc.Set(inst.Ctx, objmap)
 
-	c.String(http.StatusOK, "OK")
+	c.JSON(200, gin.H{
+		"success": true,
+	})
 }

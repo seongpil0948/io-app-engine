@@ -84,10 +84,11 @@ func (b BootPay) VerifyReceipt(receiptId string, price int) bool {
 	defer resp.Body.Close()
 	var objmap map[string]map[string]interface{}
 	GetHttpJson(*resp, &objmap)
-	log.Printf("Url: %s, status: %v, Receipt Info: %+v", apiUrl, resp.Status, dump(objmap))
-	log.Printf("Status Type: %T, Val: %v, Price Type: %T, Val: %v, Input Price: %v", objmap["data"]["status"], objmap["data"]["status"], objmap["data"]["price"], objmap["data"]["price"], price)
+	log.Printf("input receipt: %s receipt: %s status: %v, price: %v, input Price: %v", objmap["data"]["receipt_id"], receiptId, objmap["data"]["status"], objmap["data"]["price"], price)
 	status := int(objmap["data"]["status"].(float64))
-	return (status == 0 || status == 1 || status == 2 || status == 3) && int(objmap["data"]["price"].(float64)) == price
+	return (status == 0 || status == 1 || status == 2 || status == 3) &&
+		int(objmap["data"]["price"].(float64)) == price &&
+		objmap["data"]["receipt_id"].(string) == receiptId
 }
 
 func (b BootPay) Cancel(receiptId, name, reason string, price int) {
@@ -103,6 +104,7 @@ func (b BootPay) Cancel(receiptId, name, reason string, price int) {
 		log.Fatalln(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
+	// FIXME
 	req.Header.Add("Authorization", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)

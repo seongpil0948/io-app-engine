@@ -53,10 +53,8 @@ func onFeedBack(c *gin.Context) {
 	// objmap["createdAt"] = time.Now()
 	inst := fire.GetFireInstance()
 	store, _ := inst.Inst.Firestore(inst.Ctx)
-	// doc := store.Collection("bootpayFeedBack").NewDoc()
-	// // receipt_id := objmap["receipt_id"].(string)
-	// // doc := store.Collection("bootpayFeedBack").Doc(receipt_id)
-	// doc.Set(inst.Ctx, objmap)
+	doc := store.Collection("bootpayFeedBack").NewDoc()
+	doc.Set(inst.Ctx, objmap)
 
 	method := objmap["method_origin_symbol"].(string)
 	status := objmap["status"].(float64)

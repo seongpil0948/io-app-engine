@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	firebase "firebase.google.com/go/v4"
 	"google.golang.org/api/option"
@@ -24,7 +25,11 @@ var instance *FireApp
 func newApp() *FireApp {
 	appInst := new(FireApp)
 	appInst.Ctx = context.Background()
-	opt := option.WithCredentialsFile("config/secret/io-box-firebase-adminsdk-ao84p-26d1f95cfb.json")
+	gcpCredentialPath := os.Getenv("GCP_CREDENTIALS_PATH")
+	if gcpCredentialPath == "" {
+		log.Fatalf("Not Specified env gcpCredentialPath: %v", gcpCredentialPath)
+	}
+	opt := option.WithCredentialsFile(gcpCredentialPath)
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)

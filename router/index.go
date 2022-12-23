@@ -20,8 +20,7 @@ func initMiddle(r *gin.Engine) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
 	config := cors.DefaultConfig()
-	// port not working 인듯..
-	config.AllowOrigins = []string{"http://localhost", "http://localhost:8090", "https://io-box.firebaseapp.com", "https://io-box.web.app", "https://io-box--dev-wplgfcvy.web.app", "https://inout-box.com", "https://io-box--dev-pcug7p0p.web.app", "https://io-box--pr1-dev-tr8yrr1h.web.app", "https://io-box-admin.web.app", "http://localhost:5173"}
+	config.AllowOrigins = allowOrigins
 	r.Use(cors.New(config))
 }
 
@@ -29,6 +28,7 @@ func InitRoutes() gin.Engine {
 	if port := os.Getenv("PORT"); port == "" {
 		os.Setenv("PORT", "8000")
 	}
+
 	mode := os.Getenv("GAE_ENV")
 	if strings.HasPrefix(mode, "standard") {
 		log.Printf("deploy App Engine for production, Port: %s", os.Getenv("PORT"))
@@ -36,6 +36,11 @@ func InitRoutes() gin.Engine {
 	} else {
 		log.Printf("deploy App Engine for development, Port: %s", os.Getenv("PORT"))
 	}
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		fmt.Println(pair[0], ":", pair[1])
+	}
+
 	r := gin.Default()
 	initMiddle(r)
 
@@ -56,4 +61,15 @@ func InitRoutes() gin.Engine {
 	SetMailRoutes(api.Group("mail"))
 	SetLinkRoutes(api.Group("linkage"))
 	return *r
+}
+
+var allowOrigins = []string{
+	"http://localhost",
+	"https://io-box.firebaseapp.com",
+	"https://io-box.web.app",
+	"https://io-box--dev-wplgfcvy.web.app",
+	"https://inout-box.com",
+	"https://io-box--dev-pcug7p0p.web.app",
+	"https://io-box--pr1-dev-tr8yrr1h.web.app",
+	"https://io-box-admin.web.app",
 }

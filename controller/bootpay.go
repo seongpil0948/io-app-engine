@@ -34,7 +34,6 @@ func (b BootPay) ApiUrl(uri []string, onlyProd bool) string {
 
 }
 func (b BootPay) AccessToken() (string, error) {
-	// TODO: Manage Token to Memory
 	payload := map[string]interface{}{
 		"application_id": b.appId,
 		"private_key":    b.pk,
@@ -104,8 +103,6 @@ func (b BootPay) Cancel(receiptId, name, reason string, price int) {
 		log.Fatalln(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
-	// FIXME
-	req.Header.Add("Authorization", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

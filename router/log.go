@@ -46,9 +46,9 @@ func ioLogging(c *gin.Context) {
 	ctx := context.Background()
 	// c.String(http.StatusBadRequest, "Fail at GetQuery(price)")
 	// Creates a client.
-	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
+	projectID := os.Getenv("PROJECT_ID")
 	if projectID == "" {
-		log.Fatalf("Not Specified env GOOGLE_CLOUD_PROJECT: %v", projectID)
+		log.Fatalf("Not Specified env PROJECT_ID: %v", projectID)
 	}
 	// log.Printf("projectID: %s, len: %v", projectID, len(projectID))
 	client, err := logging.NewClient(ctx, projectID)

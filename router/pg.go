@@ -56,9 +56,19 @@ func onFeedBack(c *gin.Context) {
 	doc := store.Collection("bootpayFeedBack").NewDoc()
 	doc.Set(inst.Ctx, objmap)
 
-	method := objmap["method_origin_symbol"].(string)
-	status := objmap["status"].(float64)
-	userId := objmap["metadata"].(map[string]interface{})["uid"].(string)
+	method, exists := objmap["method_origin_symbol"].(string)
+	if !exists {
+		method = ""
+	}
+	status, exists := objmap["status"].(float64)
+	if !exists {
+		status = -1
+	}
+	userId, exists := objmap["metadata"].(map[string]interface{})["uid"].(string)
+	if !exists {
+		userId = ""
+	}
+
 	if method == "vbank" && status == 1 {
 		// 가상계좌 - 입금완료 처리
 		price := objmap["price"].(float64)

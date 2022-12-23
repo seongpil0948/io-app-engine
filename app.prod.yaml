@@ -1,0 +1,9 @@
+# https://cloud.google.com/appengine/docs/standard/go/config/appref?hl=ko
+runtime: go115 # or another supported version
+# app_engine_apis: true
+env_variables:
+  BOOTPAY_APP_ID: 62b45e0fe38c3000215aec6e
+  BOOTPAY_PK: jx87N78iC8uIGjGtflQvbvF/5U2PzlQsaFKMvjm91uo=
+  GCP_CREDENTIALS_PATH: config/secret//Users/sp/credentials/io-box-firebase-adminsdk-sbwq0-ce3f0de117.json
+  PROJECT_ID: io-box
+  BOX_ENV: production

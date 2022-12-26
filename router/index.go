@@ -20,7 +20,7 @@ func initMiddle(r *gin.Engine) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}))
 	config := cors.DefaultConfig()
-	config.AllowOrigins = allowOrigins
+	config.AllowOriginFunc = allowOriginFunc
 	r.Use(cors.New(config))
 }
 
@@ -64,12 +64,26 @@ func InitRoutes() gin.Engine {
 }
 
 var allowOrigins = []string{
-	"http://localhost",
 	"https://io-box.firebaseapp.com",
 	"https://io-box.web.app",
-	"https://io-box--dev-wplgfcvy.web.app",
 	"https://inout-box.com",
-	"https://io-box--dev-pcug7p0p.web.app",
-	"https://io-box--pr1-dev-tr8yrr1h.web.app",
-	"https://io-box-admin.web.app",
+	"io-box-admin.web.app",
+	"5173",
+	"5174",
+	"8080",
+	"io-box--dev-pcug7p0p.web.app",
+	"io-box--pr1-dev-tr8yrr1h.web.app",
+}
+
+func allowOriginFunc(origin string) bool {
+	fmt.Printf("origin: %s in allowOriginFunc", origin)
+	for i := 0; i < len(allowOrigins); i++ {
+		o := allowOrigins[i]
+		if strings.Contains(o, origin) == true {
+			return true
+		} else if strings.Contains(origin, o) == true {
+			return true
+		}
+	}
+	return false
 }
